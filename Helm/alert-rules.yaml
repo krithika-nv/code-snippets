@@ -1,0 +1,34 @@
+{{- if .Values.alert_rules }}
+{{- if .Values.alert_rules.enabled }}
+{{- with .Values.alert_rules }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: {{ $.Release.Name }}
+    role: alert-rules
+    app: {{ $.Release.Name }}
+    release: {{ $.Release.Name }}
+  name: {{ $.Release.Name }}
+spec:
+  groups:
+  {{- range .groups }}
+  - name: {{ .name }}
+    {{- range .rules }}
+    rules:
+      - alert: {{ .alert }}
+        expr: {{ .expr }}
+        {{- if .for }}
+        for: {{ .for }}
+        {{- end }}
+        labels:
+          severity: {{ .severity }}
+        annotations:
+          {{- range $key, $value := .annotations }}
+          {{ $key }}: {{ $value }}
+          {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

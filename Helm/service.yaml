@@ -1,0 +1,40 @@
+{{- if .Values.service }}
+{{- if .Values.service.enabled }}
+{{- with .Values.service }}
+{{- range $key,$value := .items }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $key }}
+  labels:
+    app: {{ $key }} 
+    release: {{ $.Release.Name }}
+{{- include "generic-chart.extraMetadataLabels" . | indent 4 }}
+  {{- if .annotations }}
+  annotations:
+  {{- range $key1, $value := .annotations }}
+    {{ $key1 }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}
+spec:
+  {{- if .externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .externalTrafficPolicy }}
+  {{- end }}
+  selector:
+    app: {{ $.Release.Name }}
+{{- include "generic-chart.extraLabels" . | indent 4 }}
+  ports:
+  {{- range .ports }}
+  - port: {{ .port }}
+    name: {{ .name }}
+    targetPort: {{ .targetPort }}
+    {{- if .protocol }}
+    protocol: {{ .protocol }}
+    {{- end }}
+  {{- end }}
+  type: {{ .type | default "ClusterIP" }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

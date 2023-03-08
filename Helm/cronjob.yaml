@@ -1,0 +1,54 @@
+{{- if .Values.cronjob }}
+{{- if .Values.cronjob.enabled }}
+{{- with .Values.cronjob }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    release: {{ $.Release.Name }}
+    app: {{ $.Release.Name }}
+{{- include "generic-chart.extraMetadataLabels" . | indent 4 }}
+  name: {{ $.Release.Name }}
+  namespace: default
+spec:
+  concurrencyPolicy: {{ .concurrencyPolicy }}
+  failedJobsHistoryLimit: {{ .failedJobsHistoryLimit }}
+  jobTemplate:
+    metadata:
+      labels:
+        app: {{ $.Release.Name }}
+{{- include "generic-chart.extraLabels" . | indent 8 }}
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ $.Release.Name }}
+{{- include "generic-chart.extraLabels" . | indent 12 }}
+        spec:
+          containers:
+            {{- range $key,$value := .containers }}
+            - image: {{ .image | default $.Values.image }}
+              name: {{ $key | default $.Release.Name }}
+              {{- if .env }}
+              env: 
+{{- include "generic-chart.envvars" . | indent 16 }} 
+              {{- end }}
+              {{- if .envFrom }}
+              envFrom: {{ toYaml .envFrom | nindent 16 }} 
+              {{- end }} 
+              {{- if .command }}
+              command: {{ toYaml .command | nindent 16 }}
+              {{- if .args }}
+              args: {{ toYaml .args | nindent 16 }} 
+              {{- end }} 
+              {{- end }}   
+            {{- end }}      
+          restartPolicy: Never
+          {{- if not (empty .nodeSelector) }}
+          nodeSelector: 
+            {{ toYaml .nodeSelector }}
+          {{- end }}
+  schedule: {{ .schedule | quote }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,48 @@
+{{- if .Values.hpa }}
+{{- if .Values.hpa.enabled }}
+{{- with .Values.hpa }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $.Release.Name }}
+  labels:
+    app: {{ $.Release.Name }}
+    release: {{ $.Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $.Release.Name }}
+  minReplicas: {{ .minReplicas }}
+  maxReplicas: {{ .maxReplicas }}
+  metrics:
+  {{- if .metrics.memory.enabled }}
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: {{ .metrics.memory.target }}
+  {{- end }}
+  {{- if .metrics.cpu.enabled }}
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: {{ .metrics.cpu.target }}
+  {{- end }}
+  {{- if .metricsExternal }}
+  {{- range .metricsExternal }}
+  - type: External
+    external:
+      metricName: {{ .name }}
+      targetAverageValue: {{ .value }}
+      {{- if .metricSelector }}
+      metricSelector:
+        matchLabels:
+        {{- range $k, $v := .metricSelector }}
+          {{ $k }}: {{ $v }}
+        {{- end }}
+      {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

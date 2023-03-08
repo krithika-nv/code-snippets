@@ -1,0 +1,18 @@
+{{- if .Values.configmap }}
+{{- if .Values.configmap.enabled }}
+{{- with .Values.configmap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}
+  labels:
+    app: {{ $.Release.Name }}
+    release: {{ $.Release.Name }}
+data: 
+  {{- range $key, $value := .data }}
+  {{ $key }}: {{ if not (deepEqual (typeOf $value) "string") }}{{ print "|" }}{{ end }}
+{{ toYaml $value | indent 4}}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

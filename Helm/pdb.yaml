@@ -1,0 +1,18 @@
+{{- if .Values.pdb }}
+{{- if .Values.pdb.enabled }}
+{{- with .Values.pdb }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $.Release.Name }}
+  labels:
+    app: {{ $.Release.Name }}
+    release: {{ $.Release.Name }}
+spec:
+  maxUnavailable: {{ .maxUnavailable }}
+  selector:
+    matchLabels:
+      app: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+{{- end }}

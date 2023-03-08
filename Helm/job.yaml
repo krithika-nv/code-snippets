@@ -1,0 +1,51 @@
+{{- if .Values.job }}
+{{- if .Values.job.enabled }}
+{{- with .Values.job }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: {{ .metadataLabelApp }}
+    release: {{ $.Release.Name }}
+  name: {{ .metadataName | default $.Release.Name }}{{ if .changeName }}-{{ default $.Values.image (index (values (pick .containers (toString .changeName))) 0).image | trunc -10 }}{{end}}
+  namespace: default
+spec:
+  backoffLimit: {{ .backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app: {{ .metadataLabelApp }}
+    spec:
+      {{- if .shareProcessNamespace }}
+      shareProcessNamespace: {{ .shareProcessNamespace }}
+      {{- end }}
+      containers:
+        {{- range $key,$value := .containers }}
+        - name: {{ $key }}
+          {{- if .env }}
+          env: 
+{{- include "generic-chart.envvars" . | indent 12 }}
+          {{- end }}
+          {{- if .envFrom }}
+          envFrom: {{ toYaml .envFrom | nindent 12 }} 
+          {{- end }}          
+          image: {{ .image | default $.Values.image }}
+          imagePullPolicy: {{ .imagePullPolicy | default $.Values.job.imagePullPolicy }}
+          {{- if .resources }}
+          resources: {{ toYaml .resources | nindent 12 }}
+          {{- end }}
+          {{- if .command }}
+          command: {{ toYaml .command | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- if not (empty .nodeSelector) }}
+      nodeSelector:  {{ toYaml .nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .tolerations }}
+      tolerations: {{ toYaml .tolerations | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+{{- end }}
+{{- end }}
+{{- end }}
+

@@ -1,0 +1,52 @@
+{{- if .Values.monitoring }}
+{{- if .Values.monitoring.enabled }}
+{{- with .Values.monitoring }}
+{{- if .serviceMonitorList}}
+{{- range .serviceMonitorList }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: {{ .serviceMonitor.appName | default $.Release.Name }}
+    release: {{ $.Release.Name }}
+  name: {{ .serviceMonitor.appName | default $.Release.Name }}
+  namespace: default
+spec:
+  endpoints: {{ toYaml .serviceMonitor.endpoints | nindent 4 }}
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app: {{ .serviceMonitor.selectorApp | default $.Release.Name }}
+{{- end }}
+{{- end }}
+{{- if .podMonitorList }}
+{{- range .podMonitorList }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ .podMonitor.appName | default $.Release.Name }}
+  labels:
+    app: {{ $.Release.Name }}
+    release: {{ $.Release.Name }}
+    {{- if .podMonitor.extraLabels }}
+    {{- range $key, $value := .podMonitor.extraLabels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ $.Release.Name }}
+  podMetricsEndpoints: {{ toYaml .podMonitor.podMetricsEndpoints | nindent 4 }}
+  namespaceSelector:
+    matchNames:
+    - default
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
