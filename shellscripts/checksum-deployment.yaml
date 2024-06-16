@@ -1,8 +1,0 @@
-...
-  template:
-    metadata:
-      {{- if $.Values.configmap }}
-      annotations: 
-        checksum: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
-      {{- end }}
-...
