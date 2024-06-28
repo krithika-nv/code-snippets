@@ -1,1 +1,1 @@
-# code-snippets
+# Sample Helm templates for your infra
